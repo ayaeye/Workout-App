@@ -10,8 +10,8 @@
       font-family: 'Inter', sans-serif;
       margin: 0;
       padding: 1rem;
-      background-color: #f2f2f2;
-      color: #333;
+      background-color: #121212;
+      color: #f0f0f0;
     }
     h1, h2 {
       text-align: center;
@@ -50,6 +50,8 @@
     <div id="week-buttons">
       <button onclick="setWeek(1)">Week 1</button>
       <button onclick="setWeek(2)">Week 2</button>
+      <button onclick="setWeek(3)">Week 3</button>
+      <button onclick="setWeek(4)">Week 4</button>
     </div>
     <div id="day-buttons"></div>
     <button onclick="resetAll()">Reset</button>
@@ -115,6 +117,50 @@
           'Jump Rope Intervals – 3 x 1 min',
           'Russian Twists – 3 x 15',
           'Trampoline Freestyle – 3 min'] }
+      ],
+      3: [
+        { day: 'Monday – Chest Blast', exercises: [
+          'Push-Up Board Pyramid – 5 sets',
+          'Pilates Board Chest Press – 3 x 15',
+          'Jump Rope – 3 x 1 min',
+          'Hollow Hold – 3 x 30 sec'] },
+        { day: 'Tuesday – Shoulders + Plank', exercises: [
+          'Band Shoulder Flys – 3 x 15',
+          'Plank to Push-Up – 3 x 12',
+          'Trampoline Hops – 2 min'] },
+        { day: 'Wednesday – Active Recovery', exercises: [
+          'Treadmill Walk – 20 min',
+          'Stretch Series – 10 min'] },
+        { day: 'Thursday – Core Fire', exercises: [
+          'Russian Twists – 3 x 20',
+          'Leg Raises – 3 x 15',
+          'Plank with Reach – 3 x 20 sec'] },
+        { day: 'Friday – Full Body Burn', exercises: [
+          'Push-Up Variations – 3 x 15',
+          'Trampoline Bounce – 5 min',
+          'Overhead Hold – 3 x 30 sec'] }
+      ],
+      4: [
+        { day: 'Monday – Stability Challenge', exercises: [
+          'Bird Dog – 3 x 12',
+          'Plank with Shoulder Taps – 3 x 15',
+          'Side Plank – 3 x 30 sec'] },
+        { day: 'Tuesday – Chest & Cardio', exercises: [
+          'Push-Up Board Standard – 3 x 12',
+          'Pilates Band Press – 3 x 15',
+          'Jump Rope – 4 x 30 sec'] },
+        { day: 'Wednesday – Bounce Recovery', exercises: [
+          'Trampoline Freestyle – 5 min',
+          'Forward Fold – 1 min',
+          'Child Pose – 1 min'] },
+        { day: 'Thursday – Shoulder Sculpt', exercises: [
+          'Band Shoulder Press – 3 x 12',
+          'Front Arm Raises – 3 x 10',
+          'Overhead Hold – 3 x 30 sec'] },
+        { day: 'Friday – Core to Finish', exercises: [
+          'Plank – 3 x 30 sec',
+          'Dead Bug – 3 x 10',
+          'Trampoline Cool Down – 3 min'] }
       ]
     };
 
@@ -167,9 +213,9 @@
     }
 
     function resetAll() {
-      if (confirm("Reset all progress for both weeks?")) {
+      if (confirm("Reset all progress for all weeks?")) {
         Object.keys(localStorage).forEach(key => {
-          if (key.startsWith('w1-') || key.startsWith('w2-')) {
+          if (key.startsWith('w')) {
             localStorage.removeItem(key);
           }
         });
@@ -177,7 +223,6 @@
       }
     }
 
-    // Init Week 1
     setWeek(1);
   </script>
 </body>
