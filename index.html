@@ -1,19 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Workout Planner</title>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap"
+    rel="stylesheet"
+  />
   <style>
     body {
-      font-family: 'Inter', sans-serif;
+      font-family: "Inter", sans-serif;
       margin: 0;
       padding: 1rem;
       background-color: #121212;
       color: #f0f0f0;
     }
-    h1, h2 {
+    h1,
+    h2 {
       text-align: center;
     }
     .day {
@@ -32,8 +36,11 @@
       font-size: 1rem;
       border: none;
       border-radius: 5px;
-      background-color: #007BFF;
+      background-color: #007bff;
       color: white;
+      cursor: pointer;
+      user-select: none;
+      transition: background-color 0.3s ease;
     }
     button:hover {
       background-color: #0056b3;
@@ -41,6 +48,18 @@
     .nav-buttons {
       text-align: center;
       margin: 1rem 0;
+    }
+    #video-container {
+      max-width: 600px;
+      margin: 1rem auto;
+    }
+    #video-select {
+      width: 100%;
+      padding: 0.5rem;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+      border-radius: 5px;
+      border: none;
     }
   </style>
 </head>
@@ -55,157 +74,150 @@
     </div>
     <div id="day-buttons"></div>
     <button onclick="resetAll()">Reset</button>
+    <button onclick="exportProgress()">Save/Export Progress</button>
+    <button onclick="showVideos()">How-To Videos</button>
+    <button onclick="showWorkouts()">Back to Workouts</button>
   </div>
 
   <div id="days"></div>
 
+  <div id="video-container" style="display:none;">
+    <h2>How-To Videos</h2>
+    <select id="video-select" onchange="loadVideo()"></select>
+    <div>
+      <iframe
+        id="video-frame"
+        width="560"
+        height="315"
+        src=""
+        frameborder="0"
+        allowfullscreen
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+      ></iframe>
+    </div>
+  </div>
+
   <script>
     const workouts = {
       1: [
-        { day: 'Monday – Chest & Core', exercises: [
-          'Push-Up Board (standard/wide) – 3 x 10–15',
-          'Pilates Board Chest Press (bands) – 3 x 12',
-          'Plank on Push-Up Board – 3 x 30 sec',
-          'Jump Rope – 2 rounds x 1 min',
-          'Hollow Hold – 3 x 20 sec'] },
-        { day: 'Tuesday – Shoulders & Core', exercises: [
-          'Resistance Band Shoulder Press – 3 x 12',
-          'Pilates Board Lateral Raises – 3 x 10',
-          'Front Arm Raises – 3 x 10',
-          'Bird Dog – 3 x 10 each side',
-          'Side Planks – 3 x 20 sec each side',
-          'Trampoline Bounce – 2 min'] },
-        { day: 'Wednesday – Recovery', exercises: [
-          'Treadmill Walk – 15–20 min',
-          'Trampoline Freestyle – 3 min',
-          'Stretch – 10 min (Child’s Pose, Downward Dog, etc.)'] },
-        { day: 'Thursday – Chest & Core Burn', exercises: [
-          'Push-Up Board (close grip) – 3 x 10',
-          'Pilates Board Band Flys – 3 x 12',
-          'Dead Bug – 3 x 10 each side',
-          'Jump Rope Intervals – 3 x 30 sec on / 30 sec rest',
-          'Leg Raises – 3 x 10'] },
-        { day: 'Friday – Shoulder Burnout + Core', exercises: [
-          'Resistance Band Arnold Press – 3 x 10',
-          'Upright Row (band) – 3 x 12',
-          'Overhead Hold – 3 x 30 sec',
-          'Plank with Shoulder Taps – 3 x 10 each side',
-          'Trampoline Finisher – 3 min'] }
+        {
+          day: "Monday – Chest & Core",
+          exercises: ["Push-Ups", "Plank", "Hollow Hold"],
+        },
+        { day: "Tuesday – Shoulders", exercises: ["Shoulder Press", "Lateral Raise"] },
+        { day: "Wednesday – Recovery", exercises: ["Walking", "Stretching"] },
+        { day: "Thursday – Core Burn", exercises: ["Leg Raises", "Dead Bug"] },
+        { day: "Friday – Full Body", exercises: ["Trampoline", "Push-Ups"] },
       ],
       2: [
-        { day: 'Monday – Core Stability', exercises: [
-          'Dead Bug – 3 x 10',
-          'Hollow Hold – 3 x 20 sec',
-          'Plank with Reach – 3 x 30 sec',
-          'Jump Rope – 2 rounds x 1 min'] },
-        { day: 'Tuesday – Chest Burn + Bounce', exercises: [
-          'Push-Up Variations – 3 x 12',
-          'Pilates Board Chest Flies – 3 x 12',
-          'Trampoline High Knees – 3 x 30 sec',
-          'Leg Raises – 3 x 12'] },
-        { day: 'Wednesday – Recovery Stretch', exercises: [
-          'Trampoline Light Bounce – 5 min',
-          'Hamstring Stretch – 2 min',
-          'Child Pose + Forward Fold – 2 min'] },
-        { day: 'Thursday – Shoulder Strength', exercises: [
-          'Band Shoulder Press – 3 x 12',
-          'Upright Rows – 3 x 12',
-          'Overhead Hold – 3 x 30 sec',
-          'Bird Dog – 3 x 10'] },
-        { day: 'Friday – Core & Cardio Combo', exercises: [
-          'Side Plank – 3 x 30 sec each side',
-          'Jump Rope Intervals – 3 x 1 min',
-          'Russian Twists – 3 x 15',
-          'Trampoline Freestyle – 3 min'] }
+        { day: "Monday – Core Stability", exercises: ["Dead Bug", "Plank Reach"] },
+        { day: "Tuesday – Chest", exercises: ["Push-Up Variations"] },
+        { day: "Wednesday – Recovery", exercises: ["Stretch", "Foam Roll"] },
+        { day: "Thursday – Shoulders", exercises: ["Upright Row", "Overhead Hold"] },
+        { day: "Friday – Core & Cardio", exercises: ["Russian Twists", "Jump Rope"] },
       ],
       3: [
-        { day: 'Monday – Chest Blast', exercises: [
-          'Push-Up Board Pyramid – 5 sets',
-          'Pilates Board Chest Press – 3 x 15',
-          'Jump Rope – 3 x 1 min',
-          'Hollow Hold – 3 x 30 sec'] },
-        { day: 'Tuesday – Shoulders + Plank', exercises: [
-          'Band Shoulder Flys – 3 x 15',
-          'Plank to Push-Up – 3 x 12',
-          'Trampoline Hops – 2 min'] },
-        { day: 'Wednesday – Active Recovery', exercises: [
-          'Treadmill Walk – 20 min',
-          'Stretch Series – 10 min'] },
-        { day: 'Thursday – Core Fire', exercises: [
-          'Russian Twists – 3 x 20',
-          'Leg Raises – 3 x 15',
-          'Plank with Reach – 3 x 20 sec'] },
-        { day: 'Friday – Full Body Burn', exercises: [
-          'Push-Up Variations – 3 x 15',
-          'Trampoline Bounce – 5 min',
-          'Overhead Hold – 3 x 30 sec'] }
+        { day: "Monday – Chest Focus", exercises: ["Incline Push-Ups", "Chest Flys"] },
+        { day: "Tuesday – Shoulder Sculpt", exercises: ["Arnold Press", "Front Raises"] },
+        { day: "Wednesday – Recovery", exercises: ["Stretch & Walk"] },
+        { day: "Thursday – Core Challenge", exercises: ["Plank Hold", "Side Crunches"] },
+        { day: "Friday – Burnout", exercises: ["Burpees", "Plank Taps"] },
       ],
       4: [
-        { day: 'Monday – Stability Challenge', exercises: [
-          'Bird Dog – 3 x 12',
-          'Plank with Shoulder Taps – 3 x 15',
-          'Side Plank – 3 x 30 sec'] },
-        { day: 'Tuesday – Chest & Cardio', exercises: [
-          'Push-Up Board Standard – 3 x 12',
-          'Pilates Band Press – 3 x 15',
-          'Jump Rope – 4 x 30 sec'] },
-        { day: 'Wednesday – Bounce Recovery', exercises: [
-          'Trampoline Freestyle – 5 min',
-          'Forward Fold – 1 min',
-          'Child Pose – 1 min'] },
-        { day: 'Thursday – Shoulder Sculpt', exercises: [
-          'Band Shoulder Press – 3 x 12',
-          'Front Arm Raises – 3 x 10',
-          'Overhead Hold – 3 x 30 sec'] },
-        { day: 'Friday – Core to Finish', exercises: [
-          'Plank – 3 x 30 sec',
-          'Dead Bug – 3 x 10',
-          'Trampoline Cool Down – 3 min'] }
-      ]
+        { day: "Monday – Balance & Core", exercises: ["Bird Dog", "Side Plank"] },
+        { day: "Tuesday – Chest Burn", exercises: ["Push-Up Board Close Grip"] },
+        { day: "Wednesday – Trampoline Day", exercises: ["Light Bounce", "Stretch"] },
+        { day: "Thursday – Resistance Focus", exercises: ["Band Pulls", "Press Hold"] },
+        { day: "Friday – Finisher", exercises: ["Full Routine", "Cooldown"] },
+      ],
+    };
+
+    const videos = {
+      "Push-Ups": "https://www.youtube.com/embed/_l3ySVKYVJ8",
+      "Plank": "https://www.youtube.com/embed/pSHjTRCQxIw",
+      "Hollow Hold": "https://www.youtube.com/embed/0Kw5w0Y5H-U",
+      "Shoulder Press": "https://www.youtube.com/embed/B-aVuyhvLHU",
+      "Lateral Raise": "https://www.youtube.com/embed/3VcKaXpzqRo",
+      "Walking": "https://www.youtube.com/embed/nt_h7tWynLU",
+      "Stretching": "https://www.youtube.com/embed/vE2e8cqBKeY",
+      "Leg Raises": "https://www.youtube.com/embed/JB2oyawG9KI",
+      "Dead Bug": "https://www.youtube.com/embed/7AnXbP8p0Wk",
+      "Trampoline": "https://www.youtube.com/embed/R59LTFaJNhA",
+      "Push-Up Variations": "https://www.youtube.com/embed/9f5FRzvHn5o",
+      "Plank Reach": "https://www.youtube.com/embed/Qg4-G3-0tgc",
+      "Stretch": "https://www.youtube.com/embed/oaVgf-n6a50",
+      "Foam Roll": "https://www.youtube.com/embed/bUqvOspmSkk",
+      "Upright Row": "https://www.youtube.com/embed/dG5kk58SoGs",
+      "Overhead Hold": "https://www.youtube.com/embed/9F5Ac5wM9HI",
+      "Russian Twists": "https://www.youtube.com/embed/wkD8rjkodUI",
+      "Jump Rope": "https://www.youtube.com/embed/Zr3RXaW0q0Y",
+      "Incline Push-Ups": "https://www.youtube.com/embed/fVPzjF1sKPo",
+      "Chest Flys": "https://www.youtube.com/embed/eozdVDA78K0",
+      "Arnold Press": "https://www.youtube.com/embed/vj2w851ZHRM",
+      "Front Raises": "https://www.youtube.com/embed/-t7fuZ0KhDA",
+      "Stretch & Walk": "https://www.youtube.com/embed/_I78XD-9t7Q",
+      "Plank Hold": "https://www.youtube.com/embed/pSHjTRCQxIw",
+      "Side Crunches": "https://www.youtube.com/embed/6c6mA6TKO4k",
+      "Burpees": "https://www.youtube.com/embed/dZgVxmf6jkA",
+      "Plank Taps": "https://www.youtube.com/embed/o48rFhV4E3g",
+      "Bird Dog": "https://www.youtube.com/embed/wiFNA3sqjCA",
+      "Side Plank": "https://www.youtube.com/embed/K2VljzCC16g",
+      "Push-Up Board Close Grip": "https://www.youtube.com/embed/0rV9cds3APs",
+      "Light Bounce": "https://www.youtube.com/embed/9vp-L2tA0hE",
+      "Band Pulls": "https://www.youtube.com/embed/IwD1MbYvNfE",
+      "Press Hold": "https://www.youtube.com/embed/2kQpG-RkIfs",
+      "Full Routine": "https://www.youtube.com/embed/UBMk30rjy0o",
+      "Cooldown": "https://www.youtube.com/embed/6yYHoHEQn_Y",
     };
 
     let currentWeek = 1;
 
     function setWeek(week) {
+      if (!workouts[week]) return;
       currentWeek = week;
+      document.getElementById("video-container").style.display = "none";
+      document.getElementById("days").style.display = "block";
       renderDayButtons();
       showDay(0);
     }
 
     function renderDayButtons() {
-      const container = document.getElementById('day-buttons');
-      container.innerHTML = '';
-      for (let i = 0; i < workouts[currentWeek].length; i++) {
-        const btn = document.createElement('button');
-        btn.textContent = ['Mon','Tue','Wed','Thu','Fri'][i];
+      const container = document.getElementById("day-buttons");
+      container.innerHTML = "";
+      const days = workouts[currentWeek];
+      const dayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+      days.forEach((_, i) => {
+        const btn = document.createElement("button");
+        btn.textContent = dayLabels[i] || `Day ${i + 1}`;
         btn.onclick = () => showDay(i);
         container.appendChild(btn);
-      }
+      });
     }
 
     function showDay(index) {
-      const container = document.getElementById('days');
-      container.innerHTML = '';
+      const container = document.getElementById("days");
+      container.innerHTML = "";
       const dayObj = workouts[currentWeek][index];
-      const dayDiv = document.createElement('div');
-      dayDiv.className = 'day active';
+      if (!dayObj) return;
+      const dayDiv = document.createElement("div");
+      dayDiv.className = "day active";
 
-      const title = document.createElement('h2');
+      const title = document.createElement("h2");
       title.textContent = dayObj.day;
       dayDiv.appendChild(title);
 
       dayObj.exercises.forEach((exercise, j) => {
-        const label = document.createElement('label');
-        const checkbox = document.createElement('input');
+        const label = document.createElement("label");
+        const checkbox = document.createElement("input");
         const key = `w${currentWeek}-d${index}-e${j}`;
-        checkbox.type = 'checkbox';
+        checkbox.type = "checkbox";
         checkbox.id = key;
-        checkbox.checked = localStorage.getItem(key) === 'true';
-        checkbox.addEventListener('change', () => {
+        checkbox.checked = localStorage.getItem(key) === "true";
+        checkbox.addEventListener("change", () => {
           localStorage.setItem(key, checkbox.checked);
         });
         label.appendChild(checkbox);
-        label.appendChild(document.createTextNode(' ' + exercise));
+        label.appendChild(document.createTextNode(" " + exercise));
         dayDiv.appendChild(label);
       });
 
@@ -214,13 +226,66 @@
 
     function resetAll() {
       if (confirm("Reset all progress for all weeks?")) {
-        Object.keys(localStorage).forEach(key => {
-          if (key.startsWith('w')) {
+        Object.keys(localStorage).forEach((key) => {
+          if (key.startsWith("w")) {
             localStorage.removeItem(key);
           }
         });
         showDay(0);
       }
+    }
+
+    function exportProgress() {
+      const exportData = {};
+      Object.keys(localStorage).forEach((key) => {
+        if (key.startsWith("w")) {
+          exportData[key] = localStorage.getItem(key);
+        }
+      });
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+        type: "application/json",
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "workout-progress.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function showVideos() {
+      document.getElementById("days").style.display = "none";
+      document.getElementById("video-container").style.display = "block";
+      populateVideoSelect();
+    }
+
+    function showWorkouts() {
+      document.getElementById("video-container").style.display = "none";
+      document.getElementById("days").style.display = "block";
+      showDay(0);
+    }
+
+    function populateVideoSelect() {
+      const select = document.getElementById("video-select");
+      select.innerHTML = "";
+      const exercisesSet = new Set();
+      for (const day of workouts[currentWeek]) {
+        day.exercises.forEach((ex) => exercisesSet.add(ex));
+      }
+      exercisesSet.forEach((exercise) => {
+        const option = document.createElement("option");
+        option.value = exercise;
+        option.textContent = exercise;
+        select.appendChild(option);
+      });
+      loadVideo();
+    }
+
+    function loadVideo() {
+      const select = document.getElementById("video-select");
+      const videoFrame = document.getElementById("video-frame");
+      const videoUrl = videos[select.value] || "";
+      videoFrame.src = videoUrl;
     }
 
     setWeek(1);
