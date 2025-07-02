@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Week 1 Workout</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      padding: 1rem;
+      background-color: #f2f2f2;
+      color: #333;
+    }
+    h1, h2 {
+      text-align: center;
+    }
+    .day {
+      display: none;
+    }
+    .day.active {
+      display: block;
+    }
+    .workout {
+      background: white;
+      border-radius: 10px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    label {
+      display: block;
+      margin: 0.5rem 0;
+    }
+    button {
+      margin: 0.5rem;
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 5px;
+      background-color: #007BFF;
+      color: white;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .nav-buttons {
+      text-align: center;
+      margin: 1rem 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>Week 1 Workout</h1>
+  <div class="nav-buttons">
+    <button onclick="showDay(0)">Mon</button>
+    <button onclick="showDay(1)">Tue</button>
+    <button onclick="showDay(2)">Wed</button>
+    <button onclick="showDay(3)">Thu</button>
+    <button onclick="showDay(4)">Fri</button>
+    <button onclick="resetAll()">Reset</button>
+  </div>
+
+  <div id="days"></div>
+
+  <script>
+    const workouts = [
+      {
+        day: 'Monday – Chest & Core',
+        exercises: [
+          'Push-Up Board (standard/wide) – 3 x 10–15',
+          'Pilates Board Chest Press (bands) – 3 x 12',
+          'Plank on Push-Up Board – 3 x 30 sec',
+          'Jump Rope – 2 rounds x 1 min',
+          'Hollow Hold – 3 x 20 sec'
+        ]
+      },
+      {
+        day: 'Tuesday – Shoulders & Core',
+        exercises: [
+          'Resistance Band Shoulder Press – 3 x 12',
+          'Pilates Board Lateral Raises – 3 x 10',
+          'Front Arm Raises – 3 x 10',
+          'Bird Dog – 3 x 10 each side',
+          'Side Planks – 3 x 20 sec each side',
+          'Trampoline Bounce – 2 min'
+        ]
+      },
+      {
+        day: 'Wednesday – Recovery',
+        exercises: [
+          'Treadmill Walk – 15–20 min',
+          'Trampoline Freestyle – 3 min',
+          'Stretch – 10 min (Child’s Pose, Downward Dog, etc.)'
+        ]
+      },
+      {
+        day: 'Thursday – Chest & Core Burn',
+        exercises: [
+          'Push-Up Board (close grip) – 3 x 10',
+          'Pilates Board Band Flys – 3 x 12',
+          'Dead Bug – 3 x 10 each side',
+          'Jump Rope Intervals – 3 x 30 sec on / 30 sec rest',
+          'Leg Raises – 3 x 10'
+        ]
+      },
+      {
+        day: 'Friday – Shoulder Burnout + Core',
+        exercises: [
+          'Resistance Band Arnold Press – 3 x 10',
+          'Upright Row (band) – 3 x 12',
+          'Overhead Hold – 3 x 30 sec',
+          'Plank with Shoulder Taps – 3 x 10 each side',
+          'Trampoline Finisher – 3 min'
+        ]
+      }
+    ];
+
+    const container = document.getElementById('days');
+    workouts.forEach((dayObj, i) => {
+      const dayDiv = document.createElement('div');
+      dayDiv.className = 'day';
+      dayDiv.id = `day-${i}`;
+      const title = document.createElement('h2');
+      title.textContent = dayObj.day;
+      dayDiv.appendChild(title);
+
+      dayObj.exercises.forEach((exercise, j) => {
+        const label = document.createElement('label');
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.id = `cb-${i}-${j}`;
+        checkbox.checked = localStorage.getItem(`cb-${i}-${j}`) === 'true';
+        checkbox.addEventListener('change', () => {
+          localStorage.setItem(`cb-${i}-${j}`, checkbox.checked);
+        });
+        label.appendChild(checkbox);
+        label.appendChild(document.createTextNode(` ${exercise}`));
+        dayDiv.appendChild(label);
+      });
+
+      container.appendChild(dayDiv);
+    });
+
+    function showDay(index) {
+      document.querySelectorAll('.day').forEach(day => day.classList.remove('active'));
+      document.getElementById(`day-${index}`).classList.add('active');
+    }
+
+    function resetAll() {
+      if (confirm("Are you sure you want to reset all progress?")) {
+        for (let i = 0; i < workouts.length; i++) {
+          for (let j = 0; j < workouts[i].exercises.length; j++) {
+            localStorage.removeItem(`cb-${i}-${j}`);
+            document.getElementById(`cb-${i}-${j}`).checked = false;
+          }
+        }
+      }
+    }
+
+    // Show Monday by default
+    showDay(0);
+  </script>
+</body>
+</html>
