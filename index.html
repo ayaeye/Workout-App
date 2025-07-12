@@ -4,17 +4,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Workout Planner</title>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap"
-    rel="stylesheet"
-  />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet" />
   <style>
     body {
       font-family: "Inter", sans-serif;
       margin: 0;
       padding: 1rem;
-      background-color: #121212;
+      background: black;
       color: #f0f0f0;
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-position: center;
     }
     h1, h2 {
       text-align: center;
@@ -48,12 +48,22 @@
       text-align: center;
       margin: 1rem 0;
     }
-    audio {
-      display: none;
+    #music-controls, #video-container, #playlist-container, #visualizer {
+      text-align: center;
+      margin-top: 1rem;
+    }
+    input[type="file"], input[type="url"] {
+      margin-top: 0.5rem;
+    }
+    canvas {
+      display: block;
+      margin: 0 auto;
+      border-radius: 8px;
     }
   </style>
 </head>
 <body>
+  <canvas id="background-visualizer" width="1000" height="600" style="position:fixed; top:0; left:0; z-index:-1; opacity:0.2;"></canvas>
   <h1>Workout Planner</h1>
   <div class="nav-buttons">
     <div>
@@ -65,404 +75,92 @@
     <div id="day-buttons"></div>
     <button onclick="resetAll()">Reset</button>
     <button onclick="exportProgress()">Save/Export Progress</button>
-    <button onclick="toggleMusic()" id="music-btn">Play Music</button>
-    <button onclick="changeMusic()">Change Music</button>
+    <button onclick="toggleMusic(event)">Play Music</button>
+    <button onclick="toggleVideos()">How-To Videos</button>
+    <button onclick="togglePlaylist()">My Playlist</button>
+    <input type="file" accept="image/*" onchange="uploadBackground(event)" />
   </div>
   <div id="days"></div>
-  <audio id="bg-music" loop></audio>
-
+  <div id="video-container" style="display:none;">
+    <h2>How-To Videos</h2>
+    <iframe id="video-frame" width="560" height="315" src="https://www.youtube.com/embed/_l3ySVKYVJ8" frameborder="0" allowfullscreen></iframe>
+  </div>
+  <div id="playlist-container" style="display:none;">
+    <h2>Enter YouTube or Spotify Link</h2>
+    <input type="url" id="playlist-url" placeholder="Paste your playlist URL here" />
+    <button onclick="openPlaylist()">Open</button>
+  </div>
+  <div id="visualizer">
+    <canvas id="audio-visualizer" width="600" height="100"></canvas>
+  </div>
+  <audio id="bg-music" loop>
+    <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+  </audio>
   <script>
-    const weeks = {
-      1: [
-        {
-          day: "Monday – Shoulders, Chest & Arms",
-          exercises: [
-            "Warm-Up: Treadmill walk or trampoline bounce (3 min)",
-            "Arm circles, shoulder rolls",
-            "Push-Up Board Standard Push-Ups – 12 reps",
-            "Resistance Band Chest Press – 12 reps",
-            "Resistance Band Overhead Shoulder Press – 12 reps",
-            "Resistance Band Bicep Curls – 15 reps",
-            "Resistance Band Tricep Kickbacks – 12 reps each arm",
-            "Plank to Push-Up (Up/Downs) – 30 seconds",
-            "Finisher: Treadmill incline walk or jump rope intervals (3–5 min)"
-          ]
-        },
-        {
-          day: "Tuesday – Core & Balance",
-          exercises: [
-            "Warm-Up: Trampoline light bounce (3 min)",
-            "Dynamic stretches",
-            "Plank – 30 seconds",
-            "Bird Dog – 8 each side",
-            "Dead Bug – 10 each side",
-            "Glute Bridge Marches – 10 per side",
-            "Hollow Hold – 20 seconds",
-            "Russian Twists – 20 reps",
-            "Resistance Band Chest Press – 12 reps",
-            "Resistance Band Overhead Shoulder Press – 12 reps",
-            "Resistance Band Bicep Curls – 15 reps",
-            "Plank to Push-Up (Up/Downs) – 30 seconds",
-            "Cool-Down: Child’s Pose, Seated Forward Fold"
-          ]
-        },
-        {
-          day: "Wednesday – Legs & Glutes",
-          exercises: [
-            "Warm-Up: Jump rope or treadmill walk (3 min)",
-            "Leg swings, ankle circles",
-            "Resistance Band Squats – 15 reps",
-            "Resistance Band Side Steps – 10 each way",
-            "Glute Bridges – 15 reps",
-            "Reverse Lunges – 10 each leg",
-            "Wall Sit with Band Press Out – 30 seconds",
-            "Resistance Band Chest Press – 12 reps",
-            "Resistance Band Overhead Shoulder Press – 12 reps",
-            "Resistance Band Bicep Curls – 15 reps",
-            "Plank to Push-Up (Up/Downs) – 30 seconds",
-            "Optional Finisher: 1–2 minutes trampoline jog"
-          ]
-        },
-        {
-          day: "Thursday – Cardio + Core",
-          exercises: [
-            "Warm-Up: Jump rope or treadmill brisk walk (2–3 min)",
-            "Jump Rope – 30 sec",
-            "Mountain Climbers – 30 sec",
-            "Plank with Shoulder Taps – 30 sec",
-            "Leg Raises – 12 reps",
-            "Dead Bug – 10 reps per side",
-            "Downward Dog to Plank Flow – 4 reps",
-            "Resistance Band Chest Press – 12 reps",
-            "Resistance Band Overhead Shoulder Press – 12 reps",
-            "Resistance Band Bicep Curls – 15 reps",
-            "Plank to Push-Up (Up/Downs) – 30 seconds",
-            "Cool-Down: Child’s Pose, Seated Twist, Forward Fold"
-          ]
-        },
-        {
-          day: "Friday – Full Body Strength & Mobility",
-          exercises: [
-            "Warm-Up: Trampoline bounce (3 min)",
-            "Dynamic movements",
-            "Push-Ups – 10–15 reps",
-            "Band Rows – 12 reps",
-            "Pilates Board Squats – 15 reps",
-            "Dead Bug – 10 reps each side",
-            "Bird Dog to Reach – 6 each side",
-            "Jump Rope – 30 sec",
-            "Resistance Band Chest Press – 12 reps",
-            "Resistance Band Overhead Shoulder Press – 12 reps",
-            "Resistance Band Bicep Curls – 15 reps",
-            "Plank to Push-Up (Up/Downs) – 30 seconds",
-            "Mobility Cool-Down: Downward Dog, Forward Fold, Seated Twist"
-          ]
-        }
-      ],
-      2: [
-        {
-          day: "Monday – Shoulders, Chest & Arms (Increased Reps)",
-          exercises: [
-            "Warm-Up: Treadmill walk or trampoline bounce (4 min)",
-            "Arm circles, shoulder rolls",
-            "Push-Up Board Standard Push-Ups – 15 reps",
-            "Resistance Band Chest Press – 15 reps",
-            "Resistance Band Overhead Shoulder Press – 15 reps",
-            "Resistance Band Bicep Curls – 20 reps",
-            "Resistance Band Tricep Kickbacks – 15 reps each arm",
-            "Plank to Push-Up (Up/Downs) – 40 seconds",
-            "Finisher: Treadmill incline walk or jump rope intervals (4–6 min)"
-          ]
-        },
-        {
-          day: "Tuesday – Core & Balance (Increased Volume)",
-          exercises: [
-            "Warm-Up: Trampoline light bounce (4 min)",
-            "Dynamic stretches",
-            "Plank – 40 seconds",
-            "Bird Dog – 10 each side",
-            "Dead Bug – 12 each side",
-            "Glute Bridge Marches – 12 per side",
-            "Hollow Hold – 30 seconds",
-            "Russian Twists – 25 reps",
-            "Resistance Band Chest Press – 15 reps",
-            "Resistance Band Overhead Shoulder Press – 15 reps",
-            "Resistance Band Bicep Curls – 20 reps",
-            "Plank to Push-Up (Up/Downs) – 40 seconds",
-            "Cool-Down: Child’s Pose, Seated Forward Fold"
-          ]
-        },
-        {
-          day: "Wednesday – Legs & Glutes (Increased Volume)",
-          exercises: [
-            "Warm-Up: Jump rope or treadmill walk (4 min)",
-            "Leg swings, ankle circles",
-            "Resistance Band Squats – 18 reps",
-            "Resistance Band Side Steps – 12 each way",
-            "Glute Bridges – 18 reps",
-            "Reverse Lunges – 12 each leg",
-            "Wall Sit with Band Press Out – 40 seconds",
-            "Resistance Band Chest Press – 15 reps",
-            "Resistance Band Overhead Shoulder Press – 15 reps",
-            "Resistance Band Bicep Curls – 20 reps",
-            "Plank to Push-Up (Up/Downs) – 40 seconds",
-            "Optional Finisher: 2 minutes trampoline jog"
-          ]
-        },
-        {
-          day: "Thursday – Cardio + Core (Increased Volume)",
-          exercises: [
-            "Warm-Up: Jump rope or treadmill brisk walk (3–4 min)",
-            "Jump Rope – 40 sec",
-            "Mountain Climbers – 40 sec",
-            "Plank with Shoulder Taps – 40 sec",
-            "Leg Raises – 15 reps",
-            "Dead Bug – 12 reps per side",
-            "Downward Dog to Plank Flow – 5 reps",
-            "Resistance Band Chest Press – 15 reps",
-            "Resistance Band Overhead Shoulder Press – 15 reps",
-            "Resistance Band Bicep Curls – 20 reps",
-            "Plank to Push-Up (Up/Downs) – 40 seconds",
-            "Cool-Down: Child’s Pose, Seated Twist, Forward Fold"
-          ]
-        },
-        {
-          day: "Friday – Full Body Strength & Mobility (Increased Volume)",
-          exercises: [
-            "Warm-Up: Trampoline bounce (4 min)",
-            "Dynamic movements",
-            "Push-Ups – 15–20 reps",
-            "Band Rows – 15 reps",
-            "Pilates Board Squats – 18 reps",
-            "Dead Bug – 12 reps each side",
-            "Bird Dog to Reach – 8 each side",
-            "Jump Rope – 40 sec",
-            "Resistance Band Chest Press – 15 reps",
-            "Resistance Band Overhead Shoulder Press – 15 reps",
-            "Resistance Band Bicep Curls – 20 reps",
-            "Plank to Push-Up (Up/Downs) – 40 seconds",
-            "Mobility Cool-Down: Downward Dog, Forward Fold, Seated Twist"
-          ]
-        }
-      ],
-      3: [
-        {
-          day: "Monday – Shoulders, Chest & Arms (Further Increased Reps)",
-          exercises: [
-            "Warm-Up: Treadmill walk or trampoline bounce (5 min)",
-            "Arm circles, shoulder rolls",
-            "Push-Up Board Standard Push-Ups – 18 reps",
-            "Resistance Band Chest Press – 18 reps",
-            "Resistance Band Overhead Shoulder Press – 18 reps",
-            "Resistance Band Bicep Curls – 25 reps",
-            "Resistance Band Tricep Kickbacks – 18 reps each arm",
-            "Plank to Push-Up (Up/Downs) – 50 seconds",
-            "Finisher: Treadmill incline walk or jump rope intervals (5–7 min)"
-          ]
-        },
-        {
-          day: "Tuesday – Core & Balance (Further Increased Volume)",
-          exercises: [
-            "Warm-Up: Trampoline light bounce (5 min)",
-            "Dynamic stretches",
-            "Plank – 50 seconds",
-            "Bird Dog – 12 each side",
-            "Dead Bug – 15 each side",
-            "Glute Bridge Marches – 15 per side",
-            "Hollow Hold – 40 seconds",
-            "Russian Twists – 30 reps",
-            "Resistance Band Chest Press – 18 reps",
-            "Resistance Band Overhead Shoulder Press – 18 reps",
-            "Resistance Band Bicep Curls – 25 reps",
-            "Plank to Push-Up (Up/Downs) – 50 seconds",
-            "Cool-Down: Child’s Pose, Seated Forward Fold"
-          ]
-        },
-        {
-          day: "Wednesday – Legs & Glutes (Further Increased Volume)",
-          exercises: [
-            "Warm-Up: Jump rope or treadmill walk (5 min)",
-            "Leg swings, ankle circles",
-            "Resistance Band Squats – 20 reps",
-            "Resistance Band Side Steps – 15 each way",
-            "Glute Bridges – 20 reps",
-            "Reverse Lunges – 15 each leg",
-            "Wall Sit with Band Press Out – 50 seconds",
-            "Resistance Band Chest Press – 18 reps",
-            "Resistance Band Overhead Shoulder Press – 18 reps",
-            "Resistance Band Bicep Curls – 25 reps",
-            "Plank to Push-Up (Up/Downs) – 50 seconds",
-            "Optional Finisher: 2–3 minutes trampoline jog"
-          ]
-        },
-        {
-          day: "Thursday – Cardio + Core (Further Increased Volume)",
-          exercises: [
-            "Warm-Up: Jump rope or treadmill brisk walk (4–5 min)",
-            "Jump Rope – 50 sec",
-            "Mountain Climbers – 50 sec",
-            "Plank with Shoulder Taps – 50 sec",
-            "Leg Raises – 18 reps",
-            "Dead Bug – 15 reps per side",
-            "Downward Dog to Plank Flow – 6 reps",
-            "Resistance Band Chest Press – 18 reps",
-            "Resistance Band Overhead Shoulder Press – 18 reps",
-            "Resistance Band Bicep Curls – 25 reps",
-            "Plank to Push-Up (Up/Downs) – 50 seconds",
-            "Cool-Down: Child’s Pose, Seated Twist, Forward Fold"
-          ]
-        },
-        {
-          day: "Friday – Full Body Strength & Mobility (Further Increased Volume)",
-          exercises: [
-            "Warm-Up: Trampoline bounce (5 min)",
-            "Dynamic movements",
-            "Push-Ups – 18–22 reps",
-            "Band Rows – 18 reps",
-            "Pilates Board Squats – 20 reps",
-            "Dead Bug – 15 reps each side",
-            "Bird Dog to Reach – 10 each side",
-            "Jump Rope – 50 sec",
-            "Resistance Band Chest Press – 18 reps",
-            "Resistance Band Overhead Shoulder Press – 18 reps",
-            "Resistance Band Bicep Curls – 25 reps",
-            "Plank to Push-Up (Up/Downs) – 50 seconds",
-            "Mobility Cool-Down: Downward Dog, Forward Fold, Seated Twist"
-          ]
-        }
-      ],
-      4: [
-        {
-          day: "Monday – Shoulders, Chest & Arms (Peak Volume)",
-          exercises: [
-            "Warm-Up: Treadmill walk or trampoline bounce (6 min)",
-            "Arm circles, shoulder rolls",
-            "Push-Up Board Standard Push-Ups – 20 reps",
-            "Resistance Band Chest Press – 20 reps",
-            "Resistance Band Overhead Shoulder Press – 20 reps",
-            "Resistance Band Bicep Curls – 30 reps",
-            "Resistance Band Tricep Kickbacks – 20 reps each arm",
-            "Plank to Push-Up (Up/Downs) – 60 seconds",
-            "Finisher: Treadmill incline walk or jump rope intervals (6–8 min)"
-          ]
-        },
-        {
-          day: "Tuesday – Core & Balance (Peak Volume)",
-          exercises: [
-            "Warm-Up: Trampoline light bounce (6 min)",
-            "Dynamic stretches",
-            "Plank – 60 seconds",
-            "Bird Dog – 15 each side",
-            "Dead Bug – 18 each side",
-            "Glute Bridge Marches – 18 per side",
-            "Hollow Hold – 50 seconds",
-            "Russian Twists – 35 reps",
-            "Resistance Band Chest Press – 20 reps",
-            "Resistance Band Overhead Shoulder Press – 20 reps",
-            "Resistance Band Bicep Curls – 30 reps",
-            "Plank to Push-Up (Up/Downs) – 60 seconds",
-            "Cool-Down: Child’s Pose, Seated Forward Fold"
-          ]
-        },
-        {
-          day: "Wednesday – Legs & Glutes (Peak Volume)",
-          exercises: [
-            "Warm-Up: Jump rope or treadmill walk (6 min)",
-            "Leg swings, ankle circles",
-            "Resistance Band Squats – 22 reps",
-            "Resistance Band Side Steps – 15 each way",
-            "Glute Bridges – 22 reps",
-            "Reverse Lunges – 15 each leg",
-            "Wall Sit with Band Press Out – 60 seconds",
-            "Resistance Band Chest Press – 20 reps",
-            "Resistance Band Overhead Shoulder Press – 20 reps",
-            "Resistance Band Bicep Curls – 30 reps",
-            "Plank to Push-Up (Up/Downs) – 60 seconds",
-            "Optional Finisher: 3 minutes trampoline jog"
-          ]
-        },
-        {
-          day: "Thursday – Cardio + Core (Peak Volume)",
-          exercises: [
-            "Warm-Up: Jump rope or treadmill brisk walk (5–6 min)",
-            "Jump Rope – 60 sec",
-            "Mountain Climbers – 60 sec",
-            "Plank with Shoulder Taps – 60 sec",
-            "Leg Raises – 20 reps",
-            "Dead Bug – 18 reps per side",
-            "Downward Dog to Plank Flow – 8 reps",
-            "Resistance Band Chest Press – 20 reps",
-            "Resistance Band Overhead Shoulder Press – 20 reps",
-            "Resistance Band Bicep Curls – 30 reps",
-            "Plank to Push-Up (Up/Downs) – 60 seconds",
-            "Cool-Down: Child’s Pose, Seated Twist, Forward Fold"
-          ]
-        },
-        {
-          day: "Friday – Full Body Strength & Mobility (Peak Volume)",
-          exercises: [
-            "Warm-Up: Trampoline bounce (6 min)",
-            "Dynamic movements",
-            "Push-Ups – 20–25 reps",
-            "Band Rows – 20 reps",
-            "Pilates Board Squats – 22 reps",
-            "Dead Bug – 18 reps each side",
-            "Bird Dog to Reach – 12 each side",
-            "Jump Rope – 60 sec",
-            "Resistance Band Chest Press – 20 reps",
-            "Resistance Band Overhead Shoulder Press – 20 reps",
-            "Resistance Band Bicep Curls – 30 reps",
-            "Plank to Push-Up (Up/Downs) – 60 seconds",
-            "Mobility Cool-Down: Downward Dog, Forward Fold, Seated Twist"
-          ]
-        }
-      ]
-    };
+    const fullWorkouts = { 1: [
+      { day: "Monday – Shoulders, Chest & Arms", exercises: [
+        "Warm-Up: Treadmill walk or trampoline (3 min)",
+        "Arm circles, shoulder rolls",
+        "Push-Up Board Standard Push-Ups – 12 reps",
+        "Resistance Band Chest Press – 12 reps",
+        "Resistance Band Overhead Shoulder Press – 12 reps",
+        "Resistance Band Bicep Curls – 15 reps",
+        "Resistance Band Tricep Kickbacks – 12 reps",
+        "Plank to Push-Up – 30 sec",
+        "Finisher: Treadmill incline walk or jump rope – 3–5 min"]},
+      { day: "Tuesday – Core & Balance", exercises: [
+        "Warm-Up: Trampoline bounce + dynamic stretches – 3 min",
+        "Plank – 30 sec",
+        "Bird Dog – 8 each side",
+        "Dead Bug – 10 each side",
+        "Glute Bridge Marches – 10 per side",
+        "Hollow Hold – 20 sec",
+        "Russian Twists – 20 reps",
+        "Cool-Down: Child’s Pose, Seated Forward Fold"]},
+      { day: "Wednesday – Legs & Glutes", exercises: [
+        "Warm-Up: Jump rope or treadmill – 3 min",
+        "Leg swings, ankle circles",
+        "Resistance Band Squats – 15 reps",
+        "Resistance Band Side Steps – 10 each way",
+        "Glute Bridges – 15 reps",
+        "Reverse Lunges – 10 each leg",
+        "Wall Sit w/ Band Press Out – 30 sec",
+        "Finisher: 1–2 min trampoline jog"]},
+      { day: "Thursday – Cardio + Core", exercises: [
+        "Warm-Up: Jump rope or treadmill – 3 min",
+        "Jump Rope – 30 sec",
+        "Mountain Climbers – 30 sec",
+        "Plank with Shoulder Taps – 30 sec",
+        "Leg Raises – 12 reps",
+        "Dead Bug – 10 reps per side",
+        "Downward Dog to Plank Flow – 4 reps",
+        "Cool-Down: Child’s Pose, Seated Twist"]},
+      { day: "Friday – Full Body Strength & Mobility", exercises: [
+        "Warm-Up: Trampoline bounce, dynamic movement – 3 min",
+        "Push-Ups – 10–15 reps",
+        "Band Rows – 12 reps",
+        "Pilates Board Squats – 15 reps",
+        "Dead Bug – 10 reps each side",
+        "Bird Dog to Reach – 6 each side",
+        "Jump Rope – 30 sec",
+        "Cool-Down: Downward Dog, Forward Fold"]} ] };
+
+    for (let w = 2; w <= 4; w++) {
+      fullWorkouts[w] = fullWorkouts[1].map((day) => ({
+        day: day.day.replace("–", `Week ${w} –`),
+        exercises: day.exercises.map(ex => {
+          if (ex.includes(" reps")) return ex.replace(/(\d+)/, n => Math.round(+n * (1 + 0.1 * (w - 1))));
+          return ex;
+        })
+      }));
+    }
 
     let currentWeek = 1;
 
-    const musicPlayer = document.getElementById("bg-music");
-    const defaultMusic = "https://files.freemusicarchive.org/storage-freemusicarchive-org/music/no_curator/KieLoKaz/Free_Ganymed/KieLoKaz_-_06_-_Light_And_Sunny.mp3";
-    const savedMusic = localStorage.getItem("custom-music") || defaultMusic;
-    musicPlayer.src = savedMusic;
-
-    let isPlaying = false;
-
-    function toggleMusic() {
-      const btn = document.getElementById("music-btn");
-      if (!isPlaying) {
-        musicPlayer.play().then(() => {
-          isPlaying = true;
-          btn.textContent = "Pause Music";
-        }).catch((e) => {
-          console.error("Playback failed:", e);
-        });
-      } else {
-        musicPlayer.pause();
-        isPlaying = false;
-        btn.textContent = "Play Music";
-      }
-    }
-
-    function changeMusic() {
-      const url = prompt("Paste your music MP3 URL or YouTube link:");
-      if (!url) return;
-      if (url.includes("youtube.com") || url.includes("youtu.be")) {
-        window.open(url, "_blank");
-        return;
-      }
-      musicPlayer.src = url;
-      localStorage.setItem("custom-music", url);
-      musicPlayer.play().then(() => {
-        isPlaying = true;
-        document.getElementById("music-btn").textContent = "Pause Music";
-      }).catch((e) => {
-        console.error("Playback failed:", e);
-      });
-    }
-
-    function setWeek(weekNumber) {
-      currentWeek = weekNumber;
+    function setWeek(week) {
+      currentWeek = week;
+      document.getElementById("video-container").style.display = "none";
+      document.getElementById("playlist-container").style.display = "none";
       renderDayButtons();
       showDay(0);
     }
@@ -470,11 +168,9 @@
     function renderDayButtons() {
       const container = document.getElementById("day-buttons");
       container.innerHTML = "";
-      const dayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri"];
-      const week = weeks[currentWeek];
-      week.forEach((_, i) => {
+      fullWorkouts[currentWeek].forEach((_, i) => {
         const btn = document.createElement("button");
-        btn.textContent = dayLabels[i] || `Day ${i + 1}`;
+        btn.textContent = `Day ${i + 1}`;
         btn.onclick = () => showDay(i);
         container.appendChild(btn);
       });
@@ -483,15 +179,13 @@
     function showDay(index) {
       const container = document.getElementById("days");
       container.innerHTML = "";
-      const dayObj = weeks[currentWeek][index];
+      const dayObj = fullWorkouts[currentWeek][index];
       if (!dayObj) return;
       const dayDiv = document.createElement("div");
       dayDiv.className = "day active";
-
       const title = document.createElement("h2");
       title.textContent = dayObj.day;
       dayDiv.appendChild(title);
-
       dayObj.exercises.forEach((exercise, j) => {
         const label = document.createElement("label");
         const checkbox = document.createElement("input");
@@ -499,23 +193,18 @@
         checkbox.type = "checkbox";
         checkbox.id = key;
         checkbox.checked = localStorage.getItem(key) === "true";
-        checkbox.addEventListener("change", () => {
-          localStorage.setItem(key, checkbox.checked);
-        });
+        checkbox.onchange = () => localStorage.setItem(key, checkbox.checked);
         label.appendChild(checkbox);
         label.appendChild(document.createTextNode(" " + exercise));
         dayDiv.appendChild(label);
       });
-
       container.appendChild(dayDiv);
     }
 
     function resetAll() {
-      if (confirm("Reset all progress for the week?")) {
+      if (confirm("Reset all progress for all weeks?")) {
         Object.keys(localStorage).forEach((key) => {
-          if (key.startsWith("w")) {
-            localStorage.removeItem(key);
-          }
+          if (key.startsWith("w")) localStorage.removeItem(key);
         });
         showDay(0);
       }
@@ -524,13 +213,9 @@
     function exportProgress() {
       const exportData = {};
       Object.keys(localStorage).forEach((key) => {
-        if (key.startsWith("w")) {
-          exportData[key] = localStorage.getItem(key);
-        }
+        if (key.startsWith("w")) exportData[key] = localStorage.getItem(key);
       });
-      const blob = new Blob([JSON.stringify(exportData, null, 2)], {
-        type: "application/json",
-      });
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -538,6 +223,84 @@
       a.click();
       URL.revokeObjectURL(url);
     }
+
+    function toggleMusic(event) {
+  const audio = document.getElementById("bg-music");
+  if (audio.paused) {
+    audioCtx.resume().then(() => {
+      audio.play().then(() => {
+        event.target.textContent = "Pause Music";
+      }).catch((e) => {
+        console.error("Playback error:", e);
+      });
+    });
+  } else {
+    audio.pause();
+    event.target.textContent = "Play Music";
+  }
+}
+
+    function toggleVideos() {
+      document.getElementById("video-container").style.display = "block";
+      document.getElementById("playlist-container").style.display = "none";
+    }
+
+    function togglePlaylist() {
+      document.getElementById("playlist-container").style.display = "block";
+      document.getElementById("video-container").style.display = "none";
+    }
+
+    function openPlaylist() {
+      const url = document.getElementById("playlist-url").value;
+      if (url) window.open(url, "_blank");
+    }
+
+    function uploadBackground(event) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        document.body.style.backgroundImage = `url('${e.target.result}')`;
+      };
+      reader.readAsDataURL(event.target.files[0]);
+    }
+
+    const audio = document.getElementById("bg-music");
+    const canvas = document.getElementById("audio-visualizer");
+    const ctx = canvas.getContext("2d");
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const analyser = audioCtx.createAnalyser();
+    const source = audioCtx.createMediaElementSource(audio);
+    source.connect(analyser);
+    analyser.connect(audioCtx.destination);
+    analyser.fftSize = 64;
+    const bufferLength = analyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+
+    const bgCanvas = document.getElementById("background-visualizer");
+    const bgCtx = bgCanvas.getContext("2d");
+
+    function drawVisualizer() {
+      requestAnimationFrame(drawVisualizer);
+      analyser.getByteFrequencyData(dataArray);
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+
+      for (let i = 0; i < bufferLength; i++) {
+        const barHeight = dataArray[i] / 2;
+        const x = i * (canvas.width / bufferLength);
+        ctx.fillStyle = `rgb(${barHeight + 100},50,150)`;
+        ctx.fillRect(x, canvas.height - barHeight, canvas.width / bufferLength - 2, barHeight);
+
+        const bgX = i * (bgCanvas.width / bufferLength);
+        bgCtx.fillStyle = `rgba(${barHeight + 50},${50 + barHeight / 2},200,0.2)`;
+        bgCtx.fillRect(bgX, bgCanvas.height - barHeight * 3, bgCanvas.width / bufferLength - 2, barHeight * 3);
+      }
+    }
+
+    audio.onplay = () => {
+      if (audioCtx.state === "suspended") audioCtx.resume();
+      drawVisualizer();
+    };
 
     setWeek(1);
   </script>
